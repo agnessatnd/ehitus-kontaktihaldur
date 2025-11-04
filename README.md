@@ -30,3 +30,6 @@ download filtered contact view to .csv
 4. 20.11-26.11
 5. 27.11-03.12
 6. 04.12-11.12
+
+
+Fredi
