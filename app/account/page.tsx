@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { AccountEditDialog } from "@/components/account/AccountEditDialog"
+import { AvatarUpload } from "@/components/account/AvatarUpload"
 
 export default async function AccountPage() {
   const supabase = await createClient()
@@ -22,7 +22,9 @@ export default async function AccountPage() {
   const address = user.user_metadata?.address || "—"
   const avatarUrl =
     user.user_metadata?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`
+    `https://ui-avatars.com/api/?name=${
+      firstName || lastName ? `${firstName}+${lastName}` : "User"
+    }&background=random`
 
   return (
     <main className="flex flex-col min-h-screen bg-background">
@@ -31,16 +33,7 @@ export default async function AccountPage() {
 
         <div className="flex flex-col md:flex-row items-start gap-10">
           <div className="flex flex-col items-center md:items-start gap-4 min-w-[220px]">
-            <Avatar className="h-28 w-28">
-              <AvatarImage
-                src={avatarUrl}
-                alt={`${firstName} ${lastName}`}
-              />
-              <AvatarFallback className="text-3xl">
-                {firstName?.charAt(0).toUpperCase()}
-                {lastName?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <AvatarUpload currentAvatar={avatarUrl} userId={user.id} />
 
             <div className="text-center md:text-left">
               <p className="text-xl font-medium">
@@ -48,13 +41,6 @@ export default async function AccountPage() {
               </p>
               <p className="text-sm text-muted-foreground">{email}</p>
             </div>
-
-            <Button
-              variant="outline"
-              className="mt-4"
-            >
-              Change profile picture
-            </Button>
           </div>
 
           <div className="flex-1 bg-muted/30 rounded-xl border p-8 shadow-sm">
