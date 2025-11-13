@@ -1,27 +1,28 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { AccountEditDialog } from "@/components/account/AccountEditDialog"
 
 export default async function AccountPage() {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/auth/login")
   }
 
-  const firstName = user.user_metadata?.first_name || "";
-  const lastName = user.user_metadata?.last_name || "";
-  const email = user.email || "";
-  const phone = user.user_metadata?.phone || "—";
-  const address = user.user_metadata?.address || "—";
+  const firstName = user.user_metadata?.first_name || ""
+  const lastName = user.user_metadata?.last_name || ""
+  const email = user.email || ""
+  const phone = user.user_metadata?.phone || "—"
+  const address = user.user_metadata?.address || "—"
   const avatarUrl =
     user.user_metadata?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`;
+    `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`
 
   return (
     <main className="flex flex-col min-h-screen bg-background">
@@ -31,7 +32,10 @@ export default async function AccountPage() {
         <div className="flex flex-col md:flex-row items-start gap-10">
           <div className="flex flex-col items-center md:items-start gap-4 min-w-[220px]">
             <Avatar className="h-28 w-28">
-              <AvatarImage src={avatarUrl} alt={`${firstName} ${lastName}`} />
+              <AvatarImage
+                src={avatarUrl}
+                alt={`${firstName} ${lastName}`}
+              />
               <AvatarFallback className="text-3xl">
                 {firstName?.charAt(0).toUpperCase()}
                 {lastName?.charAt(0).toUpperCase()}
@@ -45,7 +49,10 @@ export default async function AccountPage() {
               <p className="text-sm text-muted-foreground">{email}</p>
             </div>
 
-            <Button variant="outline" className="mt-4">
+            <Button
+              variant="outline"
+              className="mt-4"
+            >
               Change profile picture
             </Button>
           </div>
@@ -81,14 +88,15 @@ export default async function AccountPage() {
             </div>
 
             <div className="flex justify-end mt-8 gap-3">
-              <Button variant="default">Edit Profile</Button>
+              <AccountEditDialog user={user} />
             </div>
           </div>
         </div>
 
         <div className="mt-16 border-t pt-10">
           <p className="text-sm text-muted-foreground mb-6">
-            Deleting your account is permanent and cannot be undone. All your data will be lost.
+            Deleting your account is permanent and cannot be undone. All your
+            data will be lost.
           </p>
 
           <form>
@@ -102,5 +110,5 @@ export default async function AccountPage() {
         </div>
       </section>
     </main>
-  );
+  )
 }
