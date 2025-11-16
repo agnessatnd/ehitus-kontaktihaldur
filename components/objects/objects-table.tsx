@@ -61,7 +61,7 @@ export default function ObjectsTable({ objects }: { objects: Objekt[] }) {
                 {/* View Object button */}
                 <td className="p-3">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/objects/${obj.id}`}>View Object</Link>
+                    <Link href={`/objects/${obj.id?.toString() ?? ""}`}>View Object</Link>
                   </Button>
                 </td>
               </tr>
