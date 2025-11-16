@@ -47,7 +47,7 @@ export default function ContactsTable({ contacts }: { contacts: Contact[] }) {
 
                 <td className="p-3 font-medium">
                   <Link
-                    href={`/contacts/singleContact?id=${c.id}`}
+                    href={`/contacts/${c.id}`}
                     className="hover:underline"
                   >
                     {c.name}

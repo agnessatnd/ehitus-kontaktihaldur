@@ -4,17 +4,17 @@ import { createClient } from "@/lib/supabase/server"
 import { SingleContact } from "@/components/contacts/single-contact"
 import { getContactWithHistory } from "@/app/contacts/data"
 
-type SingleContactSearchParamsPromise = Promise<{ id?: string }>
+type SingleContactPageProps = {
+  params: { id: string } | Promise<{ id: string }>
+}
 
 export default async function SingleContactPage({
-  searchParams,
-}: {
-  searchParams: SingleContactSearchParamsPromise
-}) {
-  const { id } = await searchParams
-  const idNum = Number(id)
+  params,
+}: SingleContactPageProps) {
+  const resolvedParams = await params
+  const idNum = Number(resolvedParams.id)
 
-  if (!id || Number.isNaN(idNum)) {
+  if (!resolvedParams.id || Number.isNaN(idNum)) {
     redirect("/contacts")
   }
 
