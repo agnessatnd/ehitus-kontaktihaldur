@@ -15,23 +15,34 @@ export function SingleContact({ contact: c, history }: Props) {
   const status = workingStatus(c)
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mb-2">
+        <Button
+          variant="ghost"
+          asChild
+          className="-ml-3 h-auto p-2 text-muted-foreground hover:text-foreground font-normal"
+        >
+          <Link
+            href="/contacts"
+            className="inline-flex items-center"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to contacts
+          </Link>
+        </Button>
+      </div>
+      <div className="flex items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-semibold">{c.name}</h1>
-          <div>
-            <Button variant="ghost" asChild>
-              <Link href="/contacts" className="inline-flex items-center">
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back to contacts
-              </Link>
-            </Button>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <form action={toggleBlacklist}>
-            <input type="hidden" name="id" value={String(c.id)} />
+            <input
+              type="hidden"
+              name="id"
+              value={String(c.id)}
+            />
             <input
               type="hidden"
               name="value"
@@ -53,7 +64,11 @@ export function SingleContact({ contact: c, history }: Props) {
           </Link>
 
           <form action={deleteContact}>
-            <input type="hidden" name="id" value={String(c.id)} />
+            <input
+              type="hidden"
+              name="id"
+              value={String(c.id)}
+            />
             <button
               type="submit"
               className="inline-flex items-center rounded-md bg-red-600 text-white px-3 py-2 text-sm hover:bg-red-700"
