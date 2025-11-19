@@ -1,4 +1,4 @@
-// app/objects/[id]/page.tsx
+// kasutatud veidi aid
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fmt, objectStatus } from "@/app/objects/utils";
@@ -22,7 +22,7 @@ export default async function ObjectDetailPage({
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect("/auth/login");
 
-  // 1. Fetch the object itself (exactly as before)
+  // 1. peamine objekti GET
   const { data: object, error: objectError } = await supabase
     .from("object")
     .select("*")
@@ -34,16 +34,16 @@ export default async function ObjectDetailPage({
     notFound();
   }
 
-  // 2. Fetch ONLY the workers using your view — this is the key fix
+  // kasutab vaadet kontaktide leidmiseks
   const { data: workers, error: workersError } = await supabase
     .from("object_with_workers")
     .select("contact, contactid, ispaid")
-    .eq("id", idNum)                // this filters by object.id that exists in the view
+    .eq("id", idNum)                
     .order("contact", { ascending: true });
 
   if (workersError) {
     console.error("Error loading workers:", workersError);
-    // Don't crash the page — just show empty list
+
   }
 
   const status = objectStatus(object);
@@ -68,7 +68,7 @@ export default async function ObjectDetailPage({
         </div>
       </div>
 
-      {/* Existing info grid */}
+
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <div>
@@ -97,7 +97,7 @@ export default async function ObjectDetailPage({
         </div>
       </div>
 
-      {/* Workers Section – now works perfectly with your view */}
+      {/* töötajate kaart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -116,32 +116,42 @@ export default async function ObjectDetailPage({
           ) : (
             <div className="space-y-3">
               {workers.map((worker) => (
-                <div
+                <Link
                   key={worker.contactid}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition"
+                  href={`/contacts/${worker.contactid}`}
+                  className="block"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary" />
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 hover:border-accent transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground hover:underline">
+                          {worker.contact || "Unnamed contact"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{worker.contact || "Unnamed contact"}</p>
+
+                    <div className="flex items-center gap-2">
+                      {worker.ispaid !== null && (
+                        <Badge variant={worker.ispaid ? "default" : "secondary"}>
+                          {worker.ispaid ? (
+                            <>
+                              <DollarSign className="w-3 h-3 mr-1" />
+                              Paid
+                            </>
+                          ) : (
+                            "Unpaid"
+                          )}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        → View details
+                      </span>
                     </div>
                   </div>
-
-                  {worker.ispaid !== null && (
-                    <Badge variant={worker.ispaid ? "default" : "secondary"}>
-                      {worker.ispaid ? (
-                        <>
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          Paid
-                        </>
-                      ) : (
-                        "Unpaid"
-                      )}
-                    </Badge>
-                  )}
-                </div>
+                </Link>
               ))}
             </div>
           )}
