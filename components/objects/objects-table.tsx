@@ -24,7 +24,8 @@ export default function ObjectsTable({ objects }: { objects: Objekt[] }) {
             const status = objectStatus(obj);
 
             return (
-              <tr
+              // Wrap the whole <tr> with Link
+              <Link
                 key={obj.id}
                 className="border-t hover:bg-muted/20 transition-colors"
               >
