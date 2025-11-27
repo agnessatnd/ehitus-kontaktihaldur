@@ -31,7 +31,6 @@ export async function createObject(
     .single()
 
   if (error) {
-    console.error("Insert error:", error)
     return { success: false, message: error.message }
   }
 
