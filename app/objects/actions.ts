@@ -31,23 +31,19 @@ export async function createObject(
     .single()
 
   if (error) {
-    console.error("Insert error:", error)
     return { success: false, message: error.message }
   }
 
   redirect(`/objects/${data.id}`)
-<<<<<<< HEAD
 }
 
-// app/objects/actions.ts  ← add this function below createObject
-
 export async function updateObject(
-  _: ObjectFormState,
+  prevState: ObjectFormState,
   formData: FormData
 ): Promise<ObjectFormState> {
   const supabase = await createClient()
-
   const id = Number(formData.get("id"))
+
   if (isNaN(id)) {
     return { success: false, message: "Invalid ID" }
   }
@@ -71,6 +67,24 @@ export async function updateObject(
   }
 
   redirect(`/objects/${id}`)
-=======
->>>>>>> defe3e79d0d3e09376507a92ae85de8d61d12c37
+}
+
+export async function deleteObject(
+  prevState: ObjectFormState,
+  formData: FormData
+): Promise<ObjectFormState> {
+  const supabase = await createClient()
+  const id = Number(formData.get("id"))
+
+  if (isNaN(id)) {
+    return { success: false, message: "Invalid ID" }
+  }
+
+  const { error } = await supabase.from("object").delete().eq("id", id)
+
+  if (error) {
+    return { success: false, message: error.message }
+  }
+
+  redirect("/objects")
 }
