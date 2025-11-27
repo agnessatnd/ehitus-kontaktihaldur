@@ -41,7 +41,6 @@ export default function EditObjectForm({ object }: Props) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Hidden id field so the action knows which object to update */}
       <input type="hidden" name="id" value={object.id} />
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -107,7 +106,6 @@ export default function EditObjectForm({ object }: Props) {
             defaultValue={object.description ?? ""}
             placeholder="Detailed description..."
             className="min-h-32 resize-none"
-            // @ts-ignore – works fine in practice
             rows={5}
           />
         </div>
