@@ -83,3 +83,59 @@ export async function updateObject(
 
   redirect(`/objects/${id}`)
 }
+
+
+export async function addWorkerToObject(
+  _: ObjectFormState,
+  formData: FormData
+): Promise<ObjectFormState> {
+  "use server"
+
+  const supabase = await createClient()
+  const objectId = Number(formData.get("objectId"))
+  const contactId = Number(formData.get("contactId"))
+
+  if (isNaN(objectId) || isNaN(contactId)) {
+    return { success: false, message: "Invalid data" }
+  }
+
+  const { error } = await supabase
+    .from("workingon")
+    .insert({
+      fk_object_id: objectId,
+      fk_contact_id: contactId,
+      ispaid: false,
+    })
+    .ignoreDuplicates() 
+
+  if (error && error.code !== "23505") { 
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: "Worker added" }
+}
+
+export async function removeWorkerFromObject(
+  _: ObjectFormState,
+  formData: FormData
+): Promise<ObjectFormState> {
+  "use server"
+
+  const supabase = await createClient()
+  const objectId = Number(formData.get("objectId"))
+  const contactId = Number(formData.get("contactId"))
+
+  if (isNaN(objectId) || isNaN(contactId)) {
+    return { success: false, message: "Invalid data" }
+  }
+
+  const { error } = await supabase
+    .from("workingon")
+    .delete()
+    .eq("fk_object_id", objectId)
+    .eq("fk_contact_id", contactId)
+
+  if (error) return { success: false, message: error.message }
+
+  return { success: true, message: "Worker removed" }
+}

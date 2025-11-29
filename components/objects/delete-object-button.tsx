@@ -28,7 +28,6 @@ export default function DeleteObjectButton({ objectId, objectName }: Props) {
       }}
     >
       <input type="hidden" name="id" value={objectId} />
-
       <Button type="submit" variant="destructive" size="sm">
         <Trash2 className="mr-2 h-4 w-4" />
         Delete Object
