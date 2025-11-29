@@ -1,74 +1,69 @@
-import type { Objekt } from "@/app/objects/types"
-import { fmt, objectStatus } from "@/app/objects/utils"
-import Link from "next/link"
+"use client"
 
-export default function ObjectsTable({ objects }: { objects: Objekt[] }) {
+import { useRouter } from "next/navigation"
+import type { Database } from "@/lib/supabase/types" // adjust if you have types
+
+type Object = Database["public"]["Tables"]["object"]["Row"]
+
+interface ObjectsTableProps {
+  objects: Object[]
+}
+
+export default function ObjectsTable({ objects }: ObjectsTableProps) {
+  const router = useRouter()
+
+  if (objects.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        No objects found.
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-2xl border overflow-x-auto">
+    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40">
+        <thead className="border-b bg-muted/50">
           <tr>
-            <th className="text-left p-3">Name</th>
-            <th className="text-left p-3">Address</th>
-            <th className="text-left p-3">Description</th>
-            <th className="text-left p-3">Period</th>
-            <th className="text-left p-3">Status</th>
+            <th className="text-left p-4 font-medium">Name</th>
+            <th className="text-left p-4 font-medium">Address</th>
+            <th className="text-left p-4 font-medium">Start Date</th>
+            <th className="text-left p-4 font-medium">End Date</th>
+            <th className="text-left p-4 font-medium">Status</th>
           </tr>
         </thead>
         <tbody>
-          {objects.map((obj) => {
-            const status = objectStatus(obj)
-
-            return (
-              // Wrap the whole <tr> with Link
-              <Link
-                key={obj.id}
-                href={`/objects/${obj.id}`}
-                className="contents" 
-              >
-                <tr
-                  className="border-t hover:bg-muted/50 cursor-pointer transition-colors"
-                  role="link"
-                  tabIndex={0}
-                  aria-label={`View details for ${obj.name || "object"}`}
+          {objects.map((obj) => (
+            <tr
+              key={obj.id}
+              className="border-t hover:bg-muted/50 cursor-pointer transition-colors"
+              role="link"
+              tabIndex={0}
+              onClick={() => router.push(`/objects/${obj.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  router.push(`/objects/${obj.id}`)
+                }
+              }}
+            >
+              <td className="p-4 font-medium">{obj.name}</td>
+              <td className="p-4">{obj.location || "—"}</td>
+              <td className="p-4">{obj.startdate || "—"}</td>
+              <td className="p-4">{obj.enddate || "—"}</td>
+              <td className="p-4">
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    obj.isactive
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  }`}
                 >
-                  <td className="p-3 font-medium">{obj.name ?? "—"}</td>
-                  <td className="p-3 text-muted-foreground">
-                    {obj.location ?? "—"}
-                  </td>
-                  <td className="p-3 text-muted-foreground">
-                    {obj.description ?? "—"}
-                  </td>
-                  <td className="p-3 text-muted-foreground">
-                    {fmt(obj.startdate)} – {fmt(obj.enddate)}
-                  </td>
-                  <td className="p-3">
-                    {status === "Active" && (
-                      <span className="inline-flex items-center rounded bg-emerald-600 text-white px-2 py-0.5 text-xs font-medium">
-                        Active
-                      </span>
-                    )}
-                    {status === "Passive" && (
-                      <span className="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium">
-                        Passive
-                      </span>
-                    )}
-                    {status === "—" && (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              </Link>
-            )
-          })}
-
-          {objects.length === 0 && (
-            <tr>
-              <td colSpan={5} className="text-center p-8 text-muted-foreground">
-                No objects found
+                  {obj.isactive ? "Active" : "Inactive"}
+                </span>
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
     </div>

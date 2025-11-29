@@ -12,31 +12,22 @@ function generateInviteCode(length = 6) {
   return code
 }
 
-export async function createTeamAction(
-  _prevState: unknown,
-  formData: FormData,
-) {
+export async function createTeamAction(_prev: unknown, formData: FormData) {
+  const supabase = await createClient()
+
   const name = formData.get("name")?.toString().trim()
   if (!name) {
-    return {
-      success: false,
-      message: "Team name is required.",
-      joinCode: "",
-    }
+    return { success: false, message: "Team name is required.", joinCode: "" }
   }
-
-  const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
   if (!user) {
-    return {
-      success: false,
-      message: "Not authenticated.",
-      joinCode: "",
-    }
+    return { success: false, message: "Not authenticated.", joinCode: "" }
   }
+
   const inviteCode = generateInviteCode()
 
   const { data: team, error: teamError } = await supabase
@@ -44,31 +35,26 @@ export async function createTeamAction(
     .insert({
       name,
       invite_code: inviteCode,
-      created_at: new Date().toISOString(),
+      created_by: user.id,
     })
     .select()
     .single()
 
   if (teamError) {
-    return {
-      success: false,
-      message: teamError.message,
-      joinCode: "",
-    }
+    return { success: false, message: teamError.message, joinCode: "" }
   }
-  const { error: memberError } = await supabase.from("team_member").insert({
-    team_id: team.id,
-    user_id: user.id,
-    role_id: 1,
-    status_id: 2,
-  })
+
+  const { error: memberError } = await supabase
+    .from("team_member")
+    .insert({
+      team_id: team.id,
+      user_id: user.id,
+      role_id: 1, // ADMIN
+      status_id: 2, // APPROVED
+    })
 
   if (memberError) {
-    return {
-      success: false,
-      message: memberError.message,
-      joinCode: "",
-    }
+    return { success: false, message: memberError.message, joinCode: "" }
   }
 
   revalidatePath("/teams")
@@ -78,4 +64,171 @@ export async function createTeamAction(
     message: `Team "${name}" created successfully!`,
     joinCode: inviteCode,
   }
+}
+export async function joinTeamAction(_prev: unknown, formData: FormData) {
+  const supabase = await createClient()
+
+  const code = formData.get("code")?.toString().trim().toLowerCase()
+  if (!code) {
+    return { success: false, message: "Invite code is required." }
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, message: "Not authenticated." }
+  }
+
+  const { data: team } = await supabase
+    .from("team")
+    .select("id, invite_code")
+    .eq("invite_code", code)
+    .maybeSingle()
+
+  if (!team) {
+    return { success: false, message: "Team not found. Check the invite code." }
+  }
+
+  const { data: existing } = await supabase
+    .from("team_member")
+    .select("id, status_id")
+    .eq("team_id", team.id)
+    .eq("user_id", user.id)
+    .maybeSingle()
+
+  if (existing) {
+    if (existing.status_id === 2)
+      return { success: false, message: "You are already a member." }
+    if (existing.status_id === 1)
+      return { success: false, message: "Join request pending approval." }
+    if (existing.status_id === 3)
+      return { success: false, message: "Your request was rejected." }
+  }
+
+  const { error: joinError } = await supabase.from("team_member").insert({
+    team_id: team.id,
+    user_id: user.id,
+    role_id: 3, // VIEWER
+    status_id: 1, // PENDING
+  })
+
+  if (joinError) {
+    return { success: false, message: joinError.message }
+  }
+
+  return { success: true, message: "Join request sent! Awaiting approval." }
+}
+
+export async function approveMember(memberId: number) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: "Not authenticated." }
+
+  const { data: target, error: targetErr } = await supabase
+    .from("team_member")
+    .select("team_id")
+    .eq("id", memberId)
+    .single()
+
+  if (!target || targetErr) {
+    return { success: false, message: "Member not found." }
+  }
+
+  const { data: adminMember } = await supabase
+    .from("team_member")
+    .select("role_id")
+    .eq("team_id", target.team_id)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!adminMember || adminMember.role_id !== 1) {
+    return { success: false, message: "Not authorized." }
+  }
+
+  await supabase
+    .from("team_member")
+    .update({ status_id: 2 })
+    .eq("id", memberId)
+
+  revalidatePath(`/teams/${target.team_id}`)
+
+  return { success: true }
+}
+
+export async function rejectMember(memberId: number) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: "Not authenticated." }
+
+  const { data: target } = await supabase
+    .from("team_member")
+    .select("team_id")
+    .eq("id", memberId)
+    .single()
+
+  if (!target) {
+    return { success: false, message: "Member not found." }
+  }
+
+  const { data: adminMember } = await supabase
+    .from("team_member")
+    .select("role_id")
+    .eq("team_id", target.team_id)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!adminMember || adminMember.role_id !== 1) {
+    return { success: false, message: "Not authorized." }
+  }
+
+  await supabase
+    .from("team_member")
+    .update({ status_id: 3 })
+    .eq("id", memberId)
+
+  revalidatePath(`/teams/${target.team_id}`)
+
+  return { success: true }
+}
+
+export async function removeMember(memberId: number) {
+  const supabase = await createClient()
+
+  await supabase.from("team_member").delete().eq("id", memberId)
+  revalidatePath("/teams")
+}
+
+export async function changeRole(memberId: number, role: string) {
+  const supabase = await createClient()
+
+  const roleId = role === "ADMIN" ? 1 : role === "EDITOR" ? 2 : 3
+
+  await supabase.from("team_member").update({ role_id: roleId }).eq("id", memberId)
+
+  revalidatePath("/teams")
+}
+
+export async function regenerateInviteCode(teamId: number) {
+  const supabase = await createClient()
+  const newCode = generateInviteCode()
+
+  await supabase.from("team").update({ invite_code: newCode }).eq("id", teamId)
+
+  revalidatePath(`/teams/${teamId}`, "page")
+}
+
+export async function renameTeam(teamId: number, newName: string) {
+  const supabase = await createClient()
+
+  await supabase.from("team").update({ name: newName }).eq("id", teamId)
+
+  revalidatePath(`/teams/${teamId}`)
 }

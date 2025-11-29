@@ -31,9 +31,55 @@ export async function createObject(
     .single()
 
   if (error) {
-    console.error("Insert error:", error)
     return { success: false, message: error.message }
   }
 
   redirect(`/objects/${data.id}`)
+}
+
+export async function deleteObject(
+  _: ObjectFormState,
+  formData: FormData
+): Promise<ObjectFormState> {
+  "use server"
+
+  const supabase = await createClient()
+  const id = Number(formData.get("id"))
+
+  if (isNaN(id)) return { success: false, message: "Invalid ID" }
+
+  const { error } = await supabase.from("object").delete().eq("id", id)
+  if (error) return { success: false, message: error.message }
+
+  redirect("/objects") 
+}
+
+export async function updateObject(
+  _: ObjectFormState,
+  formData: FormData
+): Promise<ObjectFormState> {
+  const supabase = await createClient()
+  const id = Number(formData.get("id"))
+
+  if (isNaN(id)) {
+    return { success: false, message: "Invalid ID" }
+  }
+
+  const updates = {
+    name: formData.get("name") as string,
+    location: formData.get("location") as string | null,
+    description: formData.get("description") as string | null,
+    startdate: formData.get("startdate") as string | null,
+    enddate: formData.get("enddate") as string | null,
+    isactive: formData.get("isactive") === "on",
+  }
+
+ 
+  const { error } = await supabase.from("object").update(updates).eq("id", id)
+
+  if (error) {
+    return { success: false, message: error.message }
+  }
+
+  redirect(`/objects/${id}`)
 }
