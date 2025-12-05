@@ -44,14 +44,12 @@ export async function createTeamAction(_prev: unknown, formData: FormData) {
     return { success: false, message: teamError.message, joinCode: "" }
   }
 
-  const { error: memberError } = await supabase
-    .from("team_member")
-    .insert({
-      team_id: team.id,
-      user_id: user.id,
-      role_id: 1, // ADMIN
-      status_id: 2, // APPROVED
-    })
+  const { error: memberError } = await supabase.from("team_member").insert({
+    team_id: team.id,
+    user_id: user.id,
+    role_id: 1, // ADMIN
+    status_id: 2, // APPROVED
+  })
 
   if (memberError) {
     return { success: false, message: memberError.message, joinCode: "" }
@@ -125,7 +123,7 @@ export async function approveMember(memberId: number) {
   const supabase = await createClient()
 
   const {
-    data: { user }
+    data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { success: false, message: "Not authenticated." }
 
@@ -150,10 +148,7 @@ export async function approveMember(memberId: number) {
     return { success: false, message: "Not authorized." }
   }
 
-  await supabase
-    .from("team_member")
-    .update({ status_id: 2 })
-    .eq("id", memberId)
+  await supabase.from("team_member").update({ status_id: 2 }).eq("id", memberId)
 
   revalidatePath(`/teams/${target.team_id}`)
 
@@ -164,7 +159,7 @@ export async function rejectMember(memberId: number) {
   const supabase = await createClient()
 
   const {
-    data: { user }
+    data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { success: false, message: "Not authenticated." }
 
@@ -189,21 +184,51 @@ export async function rejectMember(memberId: number) {
     return { success: false, message: "Not authorized." }
   }
 
-  await supabase
-    .from("team_member")
-    .update({ status_id: 3 })
-    .eq("id", memberId)
+  await supabase.from("team_member").update({ status_id: 3 }).eq("id", memberId)
 
   revalidatePath(`/teams/${target.team_id}`)
 
   return { success: true }
 }
 
-export async function removeMember(memberId: number) {
+export async function removeMember(memberId: number, teamId: number) {
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, message: "Not authenticated." }
+
+  const { data: target } = await supabase
+    .from("team_member")
+    .select("user_id, role_id")
+    .eq("id", memberId)
+    .single()
+
+  if (!target) {
+    return { success: false, message: "Member not found." }
+  }
+
+  const { data: acting } = await supabase
+    .from("team_member")
+    .select("role_id, user_id")
+    .eq("team_id", teamId)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!acting || acting.role_id !== 1) {
+    return { success: false, message: "Only admins can remove members." }
+  }
+
+  if (target.role_id === 1) {
+    return { success: false, message: "Admins cannot be removed." }
+  }
+
   await supabase.from("team_member").delete().eq("id", memberId)
-  revalidatePath("/teams")
+
+  revalidatePath(`/teams/${teamId}`)
+  return { success: true }
 }
 
 export async function changeRole(memberId: number, role: string) {
@@ -211,7 +236,10 @@ export async function changeRole(memberId: number, role: string) {
 
   const roleId = role === "ADMIN" ? 1 : role === "EDITOR" ? 2 : 3
 
-  await supabase.from("team_member").update({ role_id: roleId }).eq("id", memberId)
+  await supabase
+    .from("team_member")
+    .update({ role_id: roleId })
+    .eq("id", memberId)
 
   revalidatePath("/teams")
 }
@@ -231,4 +259,57 @@ export async function renameTeam(teamId: number, newName: string) {
   await supabase.from("team").update({ name: newName }).eq("id", teamId)
 
   revalidatePath(`/teams/${teamId}`)
+}
+
+export async function leaveTeam(teamId: number) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, message: "Not authenticated." }
+
+  const { data: selfMember } = await supabase
+    .from("team_member")
+    .select("*")
+    .eq("team_id", teamId)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!selfMember) {
+    return { success: false, message: "You are not a member of this team." }
+  }
+
+  const { data: allMembers } = await supabase
+    .from("team_member")
+    .select("id, role_id, user_id")
+    .eq("team_id", teamId)
+
+  if (!allMembers) {
+    return { success: false, message: "Could not fetch team members." }
+  }
+
+  const memberCount = allMembers.length
+  const adminCount = allMembers.filter(m => m.role_id === 1).length
+
+  if (memberCount === 1) {
+    await supabase.from("team_member").delete().eq("id", selfMember.id)
+    await supabase.from("team").delete().eq("id", teamId)
+
+    revalidatePath("/teams")
+    return { success: true, deletedTeam: true }
+  }
+
+  if (selfMember.role_id === 1 && adminCount === 1) {
+    return {
+      success: false,
+      message: "You are the only admin. Assign another admin before leaving.",
+    }
+  }
+
+  await supabase.from("team_member").delete().eq("id", selfMember.id)
+
+  revalidatePath("/teams")
+  return { success: true }
 }
