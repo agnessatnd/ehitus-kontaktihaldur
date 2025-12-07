@@ -63,7 +63,7 @@ export async function updateWorkersAction(
     return { success: false, message: "Invalid object ID" }
   }
 
-  // Step 1: Delete all existing assignments
+
   const { error: deleteError } = await supabase
     .from("workingon")
     .delete()
@@ -74,7 +74,7 @@ export async function updateWorkersAction(
     return { success: false, message: deleteError.message }
   }
 
-  // Step 2: Insert new ones
+
   if (contactIds.length > 0) {
     const inserts = contactIds.map(contactId => ({
       fk_object_id: objectId,
@@ -217,19 +217,30 @@ export async function updateObject(
   }
 
   revalidatePath(`/objects/${id}`)
-  revalidatePath("/objects") // optional – refreshes the list page too
+  revalidatePath("/objects") 
   return { success: true, message: "Object updated successfully" }
 }
 
+// ────────────────────────────────
+// Arvustus
+// ────────────────────────────────
 export async function addReview(formData: FormData) {
-  const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/login")
+  "use server"
 
-  const workingonId = formData.get("workingon_id")
-  const rating = formData.get("rating")
-  const reviewtext = formData.get("reviewtext")?.toString().trim() || null
+
+  const supabase = await createClient()
+
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    console.error("User not authenticated when submitting review")
+
+  }
+
+  const workingonId = formData.get("workingon_id") as string
+  const rating = formData.get("rating") as string
+  const reviewtext = (formData.get("reviewtext") as string)?.trim() || null
 
   if (!workingonId || !rating) return
 
@@ -238,16 +249,16 @@ export async function addReview(formData: FormData) {
     .insert({
       fk_workingon_id: Number(workingonId),
       rating: Number(rating),
-      reviewtext: reviewtext || null,
+      reviewtext: reviewtext,
       user_id: user.id,
+      created_at: new Date().toISOString(),
     })
 
   if (error) {
-    console.error("Review insert error:", error)
-    // You could return an error state here if you want toast feedback later
+    console.error("Failed to save review:", error)
     return
   }
 
-  // Refresh the page to show updated data (or just close form)
-  revalidatePath(`/objects/[id]`, "page")
+  const objectId = formData.get("objectId") 
+  revalidatePath(`/objects/${objectId || "[id]"}`)
 }
