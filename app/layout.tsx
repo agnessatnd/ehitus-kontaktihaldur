@@ -3,7 +3,7 @@ import { Geist } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import "./globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+import SidebarProviderClient from "@/components/sidebar-provider-client";
 import { Toaster } from "@/components/ui/sonner"
 import TeamProviderClient from "@/components/team-provider-client"
 import TeamUrlSyncClient from "@/components/team-url-sync-client"
@@ -47,7 +47,7 @@ export default function RootLayout({
           <TeamProviderClient>
             <TeamUrlSyncClient />
 
-            <SidebarProvider>
+            <SidebarProviderClient>
               <div className="flex min-h-screen w-full">
                 <aside className="fixed inset-y-0 left-0 z-[100] h-full w-[200px] border-border bg-background">
                   <AppSidebar />
@@ -57,7 +57,7 @@ export default function RootLayout({
                   {children}
                 </main>
               </div>
-            </SidebarProvider>
+            </SidebarProviderClient>
 
             <Toaster
               position="top-right"
