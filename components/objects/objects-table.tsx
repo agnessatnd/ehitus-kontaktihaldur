@@ -1,23 +1,32 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import type { Database } from "@/lib/supabase/types" // adjust if you have types
+import { useRouter } from "next/navigation";
 
-type Object = Database["public"]["Tables"]["object"]["Row"]
+type ObjectRow = {
+  id: number;
+  name: string | null;
+  location: string | null;
+  description: string | null;
+  startdate: string | null;
+  enddate: string | null;
+  isactive: boolean | null;
+  user_id: string | null;
+  team_id: number | null;
+};
 
 interface ObjectsTableProps {
-  objects: Object[]
+  objects: ObjectRow[];
 }
 
 export default function ObjectsTable({ objects }: ObjectsTableProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   if (objects.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         No objects found.
       </div>
-    )
+    );
   }
 
   return (
@@ -43,8 +52,8 @@ export default function ObjectsTable({ objects }: ObjectsTableProps) {
               onClick={() => router.push(`/objects/${obj.id}`)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  router.push(`/objects/${obj.id}`)
+                  e.preventDefault();
+                  router.push(`/objects/${obj.id}`);
                 }
               }}
             >
