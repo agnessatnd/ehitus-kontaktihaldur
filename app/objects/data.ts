@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
-import type { Objekt, RawSearchParams } from "./types"
+import type { Object, RawSearchParams } from "./types"
 import { objectStatus } from "./utils"
 
-export async function getObjects(sp: RawSearchParams): Promise<Objekt[]> {
+export async function getObjects(sp: RawSearchParams): Promise<Object[]> {
   const supabase = await createClient()
 
   const {
@@ -48,7 +48,7 @@ export async function getObjects(sp: RawSearchParams): Promise<Objekt[]> {
 
   if (error) throw error
 
-  let rows = (data ?? []) as Objekt[]
+  let rows = (data ?? []) as Object[]
 
   if (fStatus === "active" || fStatus === "passive") {
     rows = rows.filter(o => !(o.startdate == null && o.enddate == null))

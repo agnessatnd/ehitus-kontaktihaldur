@@ -1,4 +1,4 @@
-import type { Objekt } from "./types"
+import type { Object } from "./types"
 
 export function fmt(d?: string | null) {
   if (!d) return "—"
@@ -7,7 +7,7 @@ export function fmt(d?: string | null) {
   return x.toLocaleDateString()
 }
 
-export function objectStatus(o: Objekt): { variant: "default" | "secondary" | "destructive" | "outline", text: string } {
+export function objectStatus(o: Object): { variant: "default" | "secondary" | "destructive" | "outline", text: string } {
   const today = new Date()
 
   const from = o.startdate ? new Date(o.startdate) : null

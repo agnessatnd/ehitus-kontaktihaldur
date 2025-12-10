@@ -1,14 +1,15 @@
-export type Objekt = {
-  id: number
-  created_at: string | null
-  name: string | null
-  location: string | null
-  description: string | null
-  startdate: string | null
-  enddate: string | null
-  inactive: boolean | null
-  user_id: string | null
-}
+export type Object = {
+  id: number;
+  created_at: string | null;
+  name: string | null;
+  location: string | null;
+  description: string | null;
+  startdate: string | null;
+  enddate: string | null;
+  isactive: boolean | null;
+  user_id: string | null;
+  team_id: number | null;
+};
 
 export type RawSearchParams = {
   q?: string
