@@ -5,7 +5,7 @@ import ContactsTable from "@/components/contacts/contacts-table"
 import { getContacts } from "./data"
 import type { SearchParamsPromise } from "./types"
 import Link from "next/link"
-import { ContactsAlerts } from "./ContactsAlerts"
+import ContactsAlertsClient from "./ContactsAlertsClient";
 
 export default async function ContactsPage({
   searchParams,
@@ -29,7 +29,7 @@ export default async function ContactsPage({
 
   return (
     <>
-      <ContactsAlerts />
+      <ContactsAlertsClient />
 
       <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
