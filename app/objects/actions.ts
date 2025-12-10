@@ -266,7 +266,7 @@ export async function addReview(formData: FormData) {
       fk_workingon_id: Number(workingonId),
       rating: Number(rating),
       reviewtext: reviewtext,
-      user_id: user.id,
+      user_id: user?.id ?? null,
       created_at: new Date().toISOString(),
     })
 

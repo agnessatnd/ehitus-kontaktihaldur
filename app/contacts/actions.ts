@@ -174,7 +174,7 @@ export async function updateContact(
     p_cost: cost,
     p_isblacklist: isblacklist,
     p_isfavorite: isfavorite,
-    p_user_id: user.id,
+    p_user_id: user?.id ?? null,
     p_team_id: teamId,
     p_history: history
   })

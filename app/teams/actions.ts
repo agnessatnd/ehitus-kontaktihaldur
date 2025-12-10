@@ -46,7 +46,7 @@ export async function createTeamAction(_prev: unknown, formData: FormData) {
 
   const { error: memberError } = await supabase.from("team_member").insert({
     team_id: team.id,
-    user_id: user.id,
+    user_id: user?.id ?? null,
     role_id: 1, // ADMIN
     status_id: 2, // APPROVED
   })
@@ -107,7 +107,7 @@ export async function joinTeamAction(_prev: unknown, formData: FormData) {
 
   const { error: joinError } = await supabase.from("team_member").insert({
     team_id: team.id,
-    user_id: user.id,
+    user_id: user?.id ?? null,
     role_id: 2, // VIEWER
     status_id: 1, // PENDING
   })
