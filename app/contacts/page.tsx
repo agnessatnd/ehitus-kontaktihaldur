@@ -3,14 +3,13 @@ import { createClient } from "@/lib/supabase/server"
 import FilterForm from "@/components/contacts/filter-form"
 import ContactsTable from "@/components/contacts/contacts-table"
 import { getContacts } from "./data"
-import type { SearchParamsPromise } from "./types"
 import Link from "next/link"
 import ContactsAlertsClient from "./ContactsAlertsClient";
 
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: SearchParamsPromise
+  searchParams: Record<string, string | string[] | undefined>
 }) {
   const supabase = await createClient()
   const {
@@ -20,7 +19,7 @@ export default async function ContactsPage({
   if (!session) redirect("/auth/login")
 
   const sp = await searchParams
-  const teamId = sp.team ?? null
+  const teamId = Array.isArray(sp.team) ? sp.team[0] : sp.team ?? null;
 
   const contacts = await getContacts({
     ...sp,

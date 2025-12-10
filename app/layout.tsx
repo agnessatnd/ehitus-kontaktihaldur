@@ -3,10 +3,11 @@ import { Geist } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import "./globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
-import SidebarProviderClient from "@/components/sidebar-provider-client";
-import { Toaster } from "@/components/ui/sonner"
+import SidebarProviderClient from "@/components/sidebar-provider-client"
 import TeamProviderClient from "@/components/team-provider-client"
 import TeamUrlSyncClient from "@/components/team-url-sync-client"
+import { Toaster } from "@/components/ui/sonner"
+import { Suspense } from "react"
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -30,14 +31,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-    >
-      <body
-        className={`${geistSans.className} antialiased`}
-        suppressHydrationWarning
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.className} antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -45,19 +40,22 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TeamProviderClient>
-            <TeamUrlSyncClient />
+            <Suspense>
+              <TeamUrlSyncClient />
+            </Suspense>
+            <Suspense>
+              <SidebarProviderClient>
+                <div className="flex min-h-screen w-full">
+                  <aside className="fixed inset-y-0 left-0 z-[100] h-full w-[200px] border-border bg-background">
+                    <AppSidebar />
+                  </aside>
 
-            <SidebarProviderClient>
-              <div className="flex min-h-screen w-full">
-                <aside className="fixed inset-y-0 left-0 z-[100] h-full w-[200px] border-border bg-background">
-                  <AppSidebar />
-                </aside>
-
-                <main className="flex-1 ml-64 p-8 transition-all duration-300">
-                  {children}
-                </main>
-              </div>
-            </SidebarProviderClient>
+                  <main className="flex-1 ml-64 p-8 transition-all duration-300">
+                    {children}
+                  </main>
+                </div>
+              </SidebarProviderClient>
+            </Suspense>
 
             <Toaster
               position="top-right"
