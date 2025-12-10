@@ -5,7 +5,7 @@ import "./globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
-import { TeamProvider } from "@/components/team-context"
+import TeamProviderClient from "@/components/team-provider-client"
 import TeamUrlSyncClient from "@/components/team-url-sync-client"
 
 const defaultUrl = process.env.VERCEL_URL
@@ -44,18 +44,21 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TeamProvider>
+          <TeamProviderClient>
             <TeamUrlSyncClient />
+
             <SidebarProvider>
               <div className="flex min-h-screen w-full">
                 <aside className="fixed inset-y-0 left-0 z-[100] h-full w-[200px] border-border bg-background">
                   <AppSidebar />
                 </aside>
+
                 <main className="flex-1 ml-64 p-8 transition-all duration-300">
                   {children}
                 </main>
               </div>
             </SidebarProvider>
+
             <Toaster
               position="top-right"
               richColors
@@ -69,7 +72,7 @@ export default function RootLayout({
                 },
               }}
             />
-          </TeamProvider>
+          </TeamProviderClient>
         </ThemeProvider>
       </body>
     </html>

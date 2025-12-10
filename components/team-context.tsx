@@ -37,7 +37,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       setUserId(data.user?.id ?? null)
     }
     loadUser()
-  }, [])
+  }, [supabase.auth])
 
   useEffect(() => {
     if (activeTeam) {
