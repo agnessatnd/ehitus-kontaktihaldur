@@ -1,20 +1,33 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+
 import AddContactForm from "@/components/contacts/add-contact"
 
-export default async function AddContactPage() {
+export default async function AddContactPage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const search = await props.searchParams
+
   const supabase = await createClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
 
-  if (!session) redirect("/auth/login")
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/auth/login")
 
-  const { data: objects, error } = await supabase
-    .from("object")
-    .select("id, name")
-    .order("name")
+  const rawTeam = search.team
+  const teamId =
+    typeof rawTeam === "string" && rawTeam.trim() !== ""
+      ? Number(rawTeam)
+      : null
 
+  let q = supabase.from("object").select("id, name").order("name")
+
+  if (teamId) {
+    q = q.eq("team_id", teamId)
+  } else {
+    q = q.eq("user_id", user.id)
+  }
+
+  const { data: objects, error } = await q
   if (error) throw error
 
   return (
